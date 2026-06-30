@@ -25,13 +25,25 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
-  
+
     await client.connect();
-   
     await client.db("admin").command({ ping: 1 });
+
+    //api start
+    const db = client.db("quickrent-Platform");
+    const collection = db.collection("properties");
+
+
+    app.post('/dashboard/owner/add-property', async (req, res) => {
+      const property = req.body;
+      const result = await collection.insertOne(property);
+      res.send(result);
+    });
+
+    //api closed
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
- 
+
     // await client.close();
   }
 }
@@ -39,13 +51,10 @@ run().catch(console.dir);
 
 // mongodb
 
-
-
-
 app.get('/', (req, res) => {
-    res.send('Server is running fine!');
+  res.send('Server is running fine!');
 });
 
 app.listen(PORT, () => {
-    console.log(`Example app listening on port ${PORT}`);
+  console.log(`Example app listening on port ${PORT}`);
 });
