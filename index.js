@@ -34,6 +34,31 @@ async function run() {
     const collection = db.collection("properties");
 
 
+    //id base data
+    // app.get('/dashboard/owner/get-properties-id/:id', async (req, res) => {
+    //   const propertyId = req.params.id;
+    //   const query = { _id: new ObjectId(propertyId) };
+    //   const result = await collection.findOne(query);
+    //   res.send(result);
+    // });
+    //id base data
+
+    //user base property
+    app.get('/dashboard/owner/get-properties/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { owner: email };
+      const result = await collection.find(query).toArray();
+      res.json(result);
+    });
+    //user base property
+
+    //all property
+    // app.get('/dashboard/owner/get-properties', async (req, res) => {
+    //   const result = await collection.find({}).toArray();
+    //   res.send(result);
+    // });
+    //all property
+
     app.post('/dashboard/owner/add-property', async (req, res) => {
       const property = req.body;
       const result = await collection.insertOne(property);
