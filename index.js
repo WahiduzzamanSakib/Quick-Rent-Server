@@ -69,6 +69,13 @@ async function run() {
     res.json(result);
 });
 
+//delete property
+  app.delete("/dashboard/owner/delete-property/:id", async (req, res) => {
+    const propertyId = req.params.id;
+    const result = await collection.deleteOne({ _id: new ObjectId(propertyId) });
+    res.json(result);
+  });
+
     //all property
     // app.get('/dashboard/owner/get-properties', async (req, res) => {
     //   const result = await collection.find({}).toArray();
