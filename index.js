@@ -52,6 +52,23 @@ async function run() {
     });
     //user base property
 
+    // edit property
+  app.patch("/dashboard/owner/edit-property/:id", async (req, res) => {
+    const propertyId = req.params.id;
+    const updateData = {};
+    Object.keys(req.body).forEach((key) => {
+      const value = req.body[key];
+      if (value !== undefined && value !== "") {
+        updateData[key] = value;
+      }
+    });
+    const result = await collection.updateOne(
+      { _id: new ObjectId(propertyId) },
+      { $set: updateData }
+    );
+    res.json(result);
+});
+
     //all property
     // app.get('/dashboard/owner/get-properties', async (req, res) => {
     //   const result = await collection.find({}).toArray();
