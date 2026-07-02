@@ -33,20 +33,31 @@ async function run() {
     const db = client.db("quickrent-Platform");
     const collection = db.collection("properties");
     const reviewCollection = db.collection("reviews");
+    const favoriteCollection = db.collection("favorite")
 
+    //favorite
+    app.get('/dashboard/tenant/favorite/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      const result = await favoriteCollection.find(query).toArray();
+      res.json(result);
+    });
 
-
+    app.post('/dashboard/tenant/favorite', async (req, res) => {
+      const favorite = req.body;
+      const newFavorite = {
+        ...favorite,
+        createdAt: new Date(),
+      };
+      const result = await favoriteCollection.insertOne(newFavorite);
+      res.send(result);
+    });
 
     // review
-
     app.get('/dashboard/single-properties/review', async (req, res) => {
       const result = await reviewCollection.find({}).toArray();
       res.send(result);
     });
-
-
-
-
 
     app.post('/dashboard/single-properties/review', async (req, res) => {
       const review = req.body;
