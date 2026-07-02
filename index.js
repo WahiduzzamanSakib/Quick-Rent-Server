@@ -112,6 +112,15 @@ app.get('/dashboard/approved/get-properties', async (req, res) => {
   res.send(result);
 });
 
+//mongodb limit
+app.get('/dashboard/approved-limit/get-properties', async (req, res) => {
+  const result = await collection
+    .find({ status: "approved" })
+    .limit(6)
+    .toArray();
+
+  res.send(result);
+});
 
 
     //all property
