@@ -32,15 +32,39 @@ async function run() {
     //api start
     const db = client.db("quickrent-Platform");
     const collection = db.collection("properties");
+    const reviewCollection = db.collection("reviews");
 
+
+
+
+    // review
+
+    app.get('/dashboard/single-properties/review', async (req, res) => {
+      const result = await reviewCollection.find({}).toArray();
+      res.send(result);
+    });
+
+
+
+
+
+    app.post('/dashboard/single-properties/review', async (req, res) => {
+      const review = req.body;
+      const newReview = {
+        ...review,
+        createdAt: new Date(),
+      };
+      const result = await reviewCollection.insertOne(newReview);
+      res.send(result);
+    });
 
     //id base data
-    // app.get('/dashboard/owner/get-properties-id/:id', async (req, res) => {
-    //   const propertyId = req.params.id;
-    //   const query = { _id: new ObjectId(propertyId) };
-    //   const result = await collection.findOne(query);
-    //   res.send(result);
-    // });
+    app.get('/dashboard/signle-prperties/:id', async (req, res) => {
+      const propertyId = req.params.id;
+      const query = { _id: new ObjectId(propertyId) };
+      const result = await collection.findOne(query);
+      res.send(result);
+    });
     //id base data
 
     //user base property
@@ -106,21 +130,21 @@ async function run() {
       }
     });
 
-//approved data
-app.get('/dashboard/approved/get-properties', async (req, res) => {
-  const result = await collection.find({ status: "approved" }).toArray();
-  res.send(result);
-});
+    //approved data
+    app.get('/dashboard/approved/get-properties', async (req, res) => {
+      const result = await collection.find({ status: "approved" }).toArray();
+      res.send(result);
+    });
 
-//mongodb limit
-app.get('/dashboard/approved-limit/get-properties', async (req, res) => {
-  const result = await collection
-    .find({ status: "approved" })
-    .limit(6)
-    .toArray();
+    //mongodb limit
+    app.get('/dashboard/approved-limit/get-properties', async (req, res) => {
+      const result = await collection
+        .find({ status: "approved" })
+        .limit(6)
+        .toArray();
 
-  res.send(result);
-});
+      res.send(result);
+    });
 
 
     //all property
