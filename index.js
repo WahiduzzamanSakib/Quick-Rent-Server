@@ -110,7 +110,7 @@ async function run() {
       }
     });
 
-    
+
     //user data
     app.get('/dashboard/admin/get-users', async (req, res) => {
       const result = await userCollection.find({}).toArray();
@@ -151,7 +151,12 @@ async function run() {
 
     // review
     app.get('/dashboard/single-properties/review', async (req, res) => {
-      const result = await reviewCollection.find({}).toArray();
+      const result = await reviewCollection
+        .find({ rating: { $gte: 3 } })
+        .sort({ createdAt: -1 })
+        .limit(4)
+        .toArray();
+
       res.send(result);
     });
 
@@ -253,6 +258,16 @@ async function run() {
       res.send(result);
     });
 
+    //recenly add properties
+    app.get('/dashboard/recent-properties', async (req, res) => {
+      const result = await collection
+        .find({ status: "approved" })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .toArray();
+
+      res.send(result);
+    });
 
     //all property
     app.get('/dashboard/admin/get-properties', async (req, res) => {
