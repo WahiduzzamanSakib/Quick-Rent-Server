@@ -36,9 +36,81 @@ async function run() {
     const favoriteCollection = db.collection("favorite")
     const userCollection = db.collection("user");
 
+    // search
+    app.get("/api/properties", async (req, res) => {
+      try {
+        const {
+          location,
+          propertyType,
+          sort,
+          minPrice,
+          maxPrice,
+        } = req.query;
+
+        let filter = {
+          status: "approved",
+        };
 
 
+        if (location) {
+          filter.location = { $regex: location, $options: "i" };
+        }
 
+
+        if (propertyType) {
+          filter.propertyType = propertyType;
+        }
+
+
+        if (minPrice || maxPrice) {
+          filter.$expr = {
+            $and: [
+              ...(minPrice
+                ? [
+                  {
+                    $gte: [
+                      { $toDouble: "$rent" },
+                      Number(minPrice),
+                    ],
+                  },
+                ]
+                : []),
+
+              ...(maxPrice
+                ? [
+                  {
+                    $lte: [
+                      { $toDouble: "$rent" },
+                      Number(maxPrice),
+                    ],
+                  },
+                ]
+                : []),
+            ],
+          };
+        }
+
+        let query = collection.find(filter);
+
+
+        if (sort === "price_asc") {
+          query = query.sort({ rent: 1 });
+        }
+
+        if (sort === "price_desc") {
+          query = query.sort({ rent: -1 });
+        }
+
+        const result = await query.toArray();
+        res.send(result);
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    
     //user data
     app.get('/dashboard/admin/get-users', async (req, res) => {
       const result = await userCollection.find({}).toArray();
