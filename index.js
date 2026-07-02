@@ -34,6 +34,30 @@ async function run() {
     const collection = db.collection("properties");
     const reviewCollection = db.collection("reviews");
     const favoriteCollection = db.collection("favorite")
+    const userCollection = db.collection("user");
+
+
+
+
+    //user data
+    app.get('/dashboard/admin/get-users', async (req, res) => {
+      const result = await userCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    app.patch('/dashboard/admin/update-role/:id', async (req, res) => {
+      const id = req.params.id;
+      const { role } = req.body;
+      const allowedRoles = ["TENANT", "ADMIN", "OWNER"];
+      const result = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { role: role } }
+      );
+      res.json({
+        result
+      });
+    });
+
 
     //favorite
     app.get('/dashboard/tenant/favorite/:email', async (req, res) => {
