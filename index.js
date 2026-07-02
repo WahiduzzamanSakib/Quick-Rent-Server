@@ -53,35 +53,74 @@ async function run() {
     //user base property
 
     // edit property
-  app.patch("/dashboard/owner/edit-property/:id", async (req, res) => {
-    const propertyId = req.params.id;
-    const updateData = {};
-    Object.keys(req.body).forEach((key) => {
-      const value = req.body[key];
-      if (value !== undefined && value !== "") {
-        updateData[key] = value;
+    app.patch("/dashboard/owner/edit-property/:id", async (req, res) => {
+      const propertyId = req.params.id;
+      const updateData = {};
+      Object.keys(req.body).forEach((key) => {
+        const value = req.body[key];
+        if (value !== undefined && value !== "") {
+          updateData[key] = value;
+        }
+      });
+      const result = await collection.updateOne(
+        { _id: new ObjectId(propertyId) },
+        { $set: updateData }
+      );
+      res.json(result);
+    });
+
+    //delete property
+    app.delete("/dashboard/owner/delete-property/:id", async (req, res) => {
+      const propertyId = req.params.id;
+      const result = await collection.deleteOne({ _id: new ObjectId(propertyId) });
+      res.json(result);
+    });
+
+    //approve and reject property
+    app.patch("/dashboard/owner/approve-reject-property/:id", async (req, res) => {
+      try {
+        const propertyId = req.params.id;
+        const { status } = req.body;
+
+        if (!["approved", "rejected"].includes(status)) {
+          return res.status(400).json({ message: "Invalid status" });
+        }
+        const result = await collection.updateOne(
+          { _id: new ObjectId(propertyId) },
+          {
+            $set: { status }
+          }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+        res.json({
+          message: "Status updated successfully",
+          result
+        });
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
       }
     });
-    const result = await collection.updateOne(
-      { _id: new ObjectId(propertyId) },
-      { $set: updateData }
-    );
-    res.json(result);
+
+//approved data
+app.get('/dashboard/approved/get-properties', async (req, res) => {
+  const result = await collection.find({ status: "approved" }).toArray();
+  res.send(result);
 });
 
-//delete property
-  app.delete("/dashboard/owner/delete-property/:id", async (req, res) => {
-    const propertyId = req.params.id;
-    const result = await collection.deleteOne({ _id: new ObjectId(propertyId) });
-    res.json(result);
-  });
+
 
     //all property
-    // app.get('/dashboard/owner/get-properties', async (req, res) => {
-    //   const result = await collection.find({}).toArray();
-    //   res.send(result);
-    // });
+    app.get('/dashboard/admin/get-properties', async (req, res) => {
+      const result = await collection.find({}).toArray();
+      res.send(result);
+    });
     //all property
+
 
     app.post('/dashboard/owner/add-property', async (req, res) => {
       const property = req.body;
