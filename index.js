@@ -49,12 +49,12 @@ async function run() {
     })
 
     // userview
-    // app.get('/api/properties/booking/:email', async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { userEmail: email };
-    //   const result = await paymentCollection.find(query).toArray();
-    //   res.send(result);
-    // })
+    app.get('/api/properties/booking/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    })
 
     //ownerview
     // app.get('/api/properties/booking/:ownerMail', async (req, res) => {
