@@ -63,12 +63,32 @@ async function run() {
     })
 
     //ownerview
-    // app.get('/api/properties/booking/:ownerMail', async (req, res) => {
-    //   const ownerMail = req.params.ownerMail;
-    //   const query = { owner: ownerMail };
-    //   const result = await paymentCollection.find(query).toArray();
-    //   res.send(result); 
-    // })
+    app.get('/api/properties/all-booking/:ownerMail', async (req, res) => {
+      const ownerMail = req.params.ownerMail;
+      const query = { ownerEmail: ownerMail };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.patch('/api/bookings/status/:id', async (req, res) => {
+      const id = req.params.id;
+      const { status } = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          bookingStatus: status
+        }
+      };
+
+      const result = await paymentCollection.updateOne(
+        filter,
+        updateDoc
+      );
+
+      res.send(result);
+    });
 
     //adminview
     // app.get('/api/properties/booking', async (req, res) => {
