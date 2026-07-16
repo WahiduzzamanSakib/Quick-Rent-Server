@@ -35,6 +35,40 @@ async function run() {
     const reviewCollection = db.collection("reviews");
     const favoriteCollection = db.collection("favorite")
     const userCollection = db.collection("user");
+    const paymentCollection = db.collection("payment");
+
+    //booking Payment
+    app.post("/api/properties/booking", async (req, res) => {
+      const payment = req.body;
+      const newPayment = {
+        ...payment,
+        createdAt: new Date(),
+      };
+      const result = await paymentCollection.insertOne(newPayment);
+      res.send(result);
+    })
+
+    // userview
+    // app.get('/api/properties/booking/:email', async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { userEmail: email };
+    //   const result = await paymentCollection.find(query).toArray();
+    //   res.send(result);
+    // })
+
+    //ownerview
+    // app.get('/api/properties/booking/:ownerMail', async (req, res) => {
+    //   const ownerMail = req.params.ownerMail;
+    //   const query = { owner: ownerMail };
+    //   const result = await paymentCollection.find(query).toArray();
+    //   res.send(result); 
+    // })
+
+    //adminview
+    // app.get('/api/properties/booking', async (req, res) => {
+    //   const result = await paymentCollection.find({}).toArray();
+    //   res.send(result);
+    // })
 
     // search
     app.get("/api/properties", async (req, res) => {
@@ -110,7 +144,6 @@ async function run() {
       }
     });
 
-
     //user data
     app.get('/dashboard/admin/get-users', async (req, res) => {
       const result = await userCollection.find({}).toArray();
@@ -132,6 +165,13 @@ async function run() {
 
 
     //favorite
+    app.delete('/dashboard/tenant/favorite/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await favoriteCollection.deleteOne({ _id: new ObjectId(id) });
+      res.json(result);
+    });
+
+
     app.get('/dashboard/tenant/favorite/:email', async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
@@ -177,7 +217,7 @@ async function run() {
       const result = await collection.findOne(query);
       res.send(result);
     });
-    //id base data
+
 
     //user base property
     app.get('/dashboard/owner/get-properties/:email', async (req, res) => {
@@ -186,7 +226,7 @@ async function run() {
       const result = await collection.find(query).toArray();
       res.json(result);
     });
-    //user base property
+
 
     // edit property
     app.patch("/dashboard/owner/edit-property/:id", async (req, res) => {
@@ -260,13 +300,17 @@ async function run() {
 
     //recenly add properties
     app.get('/dashboard/recent-properties', async (req, res) => {
-      const result = await collection
-        .find({ status: "approved" })
-        .sort({ createdAt: -1 })
-        .limit(3)
-        .toArray();
+      try {
+        const result = await collection
+          .find({ status: "approved" })
+          .sort({ createdAt: -1 }) // newest first
+          .limit(3)
+          .toArray();
 
-      res.send(result);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Server error", error });
+      }
     });
 
     //all property
