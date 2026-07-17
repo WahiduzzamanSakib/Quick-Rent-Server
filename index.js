@@ -37,7 +37,57 @@ async function run() {
     const userCollection = db.collection("user");
     const paymentCollection = db.collection("payment");
 
-    //booking Payment
+
+    //owner overview
+    app.get('/dashboard/owner/overview/:email', async (req, res) => {
+      const email = req.params.email;
+
+      // owner properties
+      const properties = await collection.find({
+        owner: email
+      }).toArray();
+
+      // owner bookings
+      const bookings = await paymentCollection.find({
+        ownerEmail: email
+      }).toArray();
+
+      // total earning from totalRent
+      const totalEarnings = bookings.reduce(
+        (sum, item) => sum + Number(item.totalRent || 0),
+        0
+      );
+
+
+      // monthly earnings
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthly = {};
+      months.forEach(month => {
+        monthly[month] = 0;
+      });
+
+      bookings.forEach(item => {
+        const monthNumber = parseInt(item.checkIn.split("-")[1]);
+        const month = months[monthNumber - 1];
+        monthly[month] += Number(item.totalRent || 0);
+      });
+
+      const chartData = months.map(month => ({
+        month,
+        earnings: monthly[month]
+      }));
+
+      res.send({
+        totalEarnings,
+        totalProperties: properties.length,
+        totalBookings: bookings.length,
+        chartData
+      });
+
+    });
+
+
+    //booking Payment ........
     app.post("/api/properties/booking", async (req, res) => {
       const payment = req.body;
       const newPayment = {
@@ -91,10 +141,12 @@ async function run() {
     });
 
     //adminview
-    // app.get('/api/properties/booking', async (req, res) => {
-    //   const result = await paymentCollection.find({}).toArray();
-    //   res.send(result);
-    // })
+    app.get('/api/all-properties/booking', async (req, res) => {
+      const result = await paymentCollection.find({}).toArray();
+      res.send(result);
+    })
+    //Booking payment............
+
 
     // search
     app.get("/api/properties", async (req, res) => {
