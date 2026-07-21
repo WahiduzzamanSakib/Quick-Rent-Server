@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 
 const dotenv = require('dotenv');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -23,6 +24,42 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+const JWKS = createRemoteJWKSet(
+  new URL(`${process.env.BETTER_AUTH_URL}/api/auth/jwks`)
+);
+const verifyToken = async (req, res, next) => {
+  const authHeader = req?.headers?.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    req.user = payload;
+    console.log(payload);
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(403).json({ message: "Forbidden" });
+  }
+};
+const ownerVerify = async (req, res, next) => {
+  const user = req.user;
+  if (user.role !== "OWNER") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
+
 async function run() {
   try {
 
@@ -249,7 +286,6 @@ async function run() {
       res.json(result);
     });
 
-
     app.get('/dashboard/tenant/favorite/:email', async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
@@ -288,7 +324,7 @@ async function run() {
       res.send(result);
     });
 
-    //id base data
+    //id base data/details
     app.get('/dashboard/signle-prperties/:id', async (req, res) => {
       const propertyId = req.params.id;
       const query = { _id: new ObjectId(propertyId) };
@@ -396,10 +432,8 @@ async function run() {
       const result = await collection.find({}).toArray();
       res.send(result);
     });
-    //all property
 
-
-    app.post('/dashboard/owner/add-property', async (req, res) => {
+    app.post('/dashboard/owner/add-property', verifyToken, ownerVerify, async (req, res) => {
       const property = req.body;
       const result = await collection.insertOne(property);
       res.send(result);
@@ -415,7 +449,6 @@ async function run() {
 run().catch(console.dir);
 
 // mongodb
-
 app.get('/', (req, res) => {
   res.send('Server is running fine!');
 });
