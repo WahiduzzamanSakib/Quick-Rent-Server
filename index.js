@@ -28,6 +28,7 @@ const client = new MongoClient(uri, {
 const JWKS = createRemoteJWKSet(
   new URL(`${process.env.BETTER_AUTH_URL}/api/auth/jwks`)
 );
+
 const verifyToken = async (req, res, next) => {
   const authHeader = req?.headers?.authorization;
 
@@ -44,7 +45,6 @@ const verifyToken = async (req, res, next) => {
   try {
     const { payload } = await jwtVerify(token, JWKS);
     req.user = payload;
-    console.log(payload);
     next();
   } catch (error) {
     console.error(error);
@@ -54,6 +54,22 @@ const verifyToken = async (req, res, next) => {
 const ownerVerify = async (req, res, next) => {
   const user = req.user;
   if (user.role !== "OWNER") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
+const adminVerify = async (req, res, next) => {
+  const user = req.user;
+  if (user.role !== "ADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
+const tenantVerify = async (req, res, next) => {
+  const user = req.user;
+  if (user.role !== "TENANT") {
     return res.status(401).json({ message: "Unauthorized" });
   }
   next();
@@ -136,7 +152,7 @@ async function run() {
     })
 
     // userview
-    app.get('/api/properties/booking/:email', async (req, res) => {
+    app.get('/api/properties/booking/:email', verifyToken, tenantVerify, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await paymentCollection.find(query).toArray();
@@ -150,7 +166,7 @@ async function run() {
     })
 
     //ownerview
-    app.get('/api/properties/all-booking/:ownerMail', async (req, res) => {
+    app.get('/api/properties/all-booking/:ownerMail', verifyToken, ownerVerify, async (req, res) => {
       const ownerMail = req.params.ownerMail;
       const query = { ownerEmail: ownerMail };
       const result = await paymentCollection.find(query).toArray();
@@ -178,10 +194,11 @@ async function run() {
     });
 
     //adminview
-    app.get('/api/all-properties/booking', async (req, res) => {
+    app.get('/api/all-properties/booking', verifyToken, adminVerify, async (req, res) => {
       const result = await paymentCollection.find({}).toArray();
       res.send(result);
     })
+
     //Booking payment............
 
 
@@ -286,14 +303,14 @@ async function run() {
       res.json(result);
     });
 
-    app.get('/dashboard/tenant/favorite/:email', async (req, res) => {
+    app.get('/dashboard/tenant/favorite/:email', verifyToken, tenantVerify, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await favoriteCollection.find(query).toArray();
       res.json(result);
     });
 
-    app.post('/dashboard/tenant/favorite', async (req, res) => {
+    app.post('/dashboard/tenant/favorite', verifyToken, async (req, res) => {
       const favorite = req.body;
       const newFavorite = {
         ...favorite,
@@ -314,7 +331,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post('/dashboard/single-properties/review', async (req, res) => {
+    app.post('/dashboard/single-properties/review', verifyToken, async (req, res) => {
       const review = req.body;
       const newReview = {
         ...review,
@@ -325,7 +342,7 @@ async function run() {
     });
 
     //id base data/details
-    app.get('/dashboard/signle-prperties/:id', async (req, res) => {
+    app.get('/dashboard/signle-prperties/:id', verifyToken, async (req, res) => {
       const propertyId = req.params.id;
       const query = { _id: new ObjectId(propertyId) };
       const result = await collection.findOne(query);
@@ -334,7 +351,7 @@ async function run() {
 
 
     //user base property
-    app.get('/dashboard/owner/get-properties/:email', async (req, res) => {
+    app.get('/dashboard/owner/get-properties/:email', verifyToken, ownerVerify, async (req, res) => {
       const email = req.params.email;
       const query = { owner: email };
       const result = await collection.find(query).toArray();
@@ -428,7 +445,7 @@ async function run() {
     });
 
     //all property
-    app.get('/dashboard/admin/get-properties', async (req, res) => {
+    app.get('/dashboard/admin/get-properties', verifyToken, adminVerify, async (req, res) => {
       const result = await collection.find({}).toArray();
       res.send(result);
     });
