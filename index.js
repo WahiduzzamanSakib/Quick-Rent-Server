@@ -79,8 +79,8 @@ const tenantVerify = async (req, res, next) => {
 async function run() {
   try {
 
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
 
     //api start
     const db = client.db("quickrent-Platform");
@@ -199,10 +199,26 @@ async function run() {
       res.send(result);
     })
 
+    app.patch("/api/bookings/:id", verifyToken, adminVerify, async (req, res) => {
+      const { id } = req.params;
+      const { bookingStatus } = req.body;
+      const result = await paymentCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            bookingStatus,
+          },
+        }
+      );
+      res.send(result);
+    }
+    );
+
+
     //Booking payment............
 
 
-    // search
+    // search - all properties
     app.get("/api/properties", async (req, res) => {
       try {
         const {
