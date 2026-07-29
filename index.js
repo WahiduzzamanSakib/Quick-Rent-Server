@@ -82,7 +82,7 @@ async function run() {
     // await client.connect();
     // await client.db("admin").command({ ping: 1 });
 
-    //api start
+    //api start - all collection
     const db = client.db("quickrent-Platform");
     const collection = db.collection("properties");
     const reviewCollection = db.collection("reviews");
@@ -216,7 +216,6 @@ async function run() {
 
 
     //Booking payment............
-
 
     // search - all properties
     app.get("/api/properties", async (req, res) => {
