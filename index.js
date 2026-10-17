@@ -336,9 +336,19 @@ async function run() {
     });
 
     // review
+
+app.get('/dashboard/single-properties/all-reviews', async (req, res) => {
+    const result = await reviewCollection
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+
+    res.send(result);
+});
+
     app.get('/dashboard/single-properties/review', async (req, res) => {
       const result = await reviewCollection
-        .find({ rating: { $gte: 3 } })
+        .find({ rating: { $gte: 4 } })
         .sort({ createdAt: -1 })
         .limit(4)
         .toArray();
